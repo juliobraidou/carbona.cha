@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Carbona design tokens
+   Extracted from the Figma file: near-black surfaces, one vivid accent
+   per flavour, and a single signature easing used across the whole site.
+------------------------------------------------------------------- */
+@theme {
+  /* Surfaces — the whole site sits on near-black, not pure black, so the
+     card gradients and the can glows have something to separate from. */
+  --color-ink: #050505;
+  --color-ink-raised: #0d0d0d;
+  --color-ink-card: #141414;
+  --color-ink-hairline: rgba(255, 255, 255, 0.09);
+
+  /* Text */
+  --color-chalk: #ffffff;
+  --color-chalk-dim: rgba(255, 255, 255, 0.62);
+  --color-chalk-faint: rgba(255, 255, 255, 0.38);
+
+  /* Flavour accents — pulled from the can artwork */
+  --color-limao: #8ed600;
+  --color-limao-bright: #c4f000;
+  --color-pessego: #f5871f;
+  --color-pessego-bright: #ffa54a;
+  --color-morango: #e4002b;
+  --color-morango-bright: #ff2d55;
+
+  /* Type */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-inter), sans-serif;
+  --font-wordmark: var(--font-archivo), var(--font-inter), sans-serif;
+
+  /* Motion — "Energetic" personality: fast, decisive, a little overshoot.
+     One signature curve carries ~80% of the motion on the site. */
+  --ease-signature: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --duration-quick: 160ms;
+  --duration-standard: 320ms;
+  --duration-slow: 560ms;
+  --duration-hero: 900ms;
+}
+
+/* ------------------------------------------------------------------
+   Base
+------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+  /* Keeps the fixed header from covering anchor targets. */
+  scroll-padding-top: 7rem;
+  background-color: var(--color-ink);
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: var(--color-limao);
+  color: #000;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-limao);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* The hero wordmark and the section titles are set very tight — this is the
+   single most recognisable thing about the design, so it gets its own class
+   rather than being re-declared at every call site. */
+.wordmark {
+  font-family: var(--font-wordmark);
+  /* The expanded width axis is the whole point — at the default width the
+     word is far too narrow to span the viewport the way the design does.
+     Archivo maxes out at wdth 125, which still leaves the letters ~1.35x
+     too tall for their width, so the span below is stretched the rest of
+     the way. The weight is dialled back to 820 because the stretch also
+     thickens every vertical stem. */
+  font-variation-settings:
+    "wdth" 125,
+    "wght" 820;
+  letter-spacing: -0.005em;
+  line-height: 0.85;
+  text-transform: uppercase;
+  display: inline-block;
+  transform: scaleX(1.35);
+  transform-origin: center;
+}
+
+.section-title {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+/* The primary button surface, from the Figma spec: a horizontal ramp from
+   #262626 to #0b0b0c. Declared once because "Adicionar" and the contact
+   form's submit are the same control — keeping them in sync by hand is how
+   two buttons quietly drift apart. */
+.btn-surface {
+  background-image: linear-gradient(90deg, #262626 0%, #0b0b0c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-chalk);
+  transition:
+    background-image var(--duration-quick) var(--ease-signature),
+    border-color var(--duration-quick) var(--ease-signature),
+    transform var(--duration-quick) var(--ease-signature);
+}
+
+/* Lifted a step rather than washed out — the ramp keeps its direction so the
+   button does not appear to flip on hover. */
+.btn-surface:hover:not(:disabled) {
+  background-image: linear-gradient(90deg, #34343a 0%, #17171b 100%);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.btn-surface:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-surface:disabled {
+  opacity: 0.6;
+}
+
+/* ------------------------------------------------------------------
+   Hero idle drift — what keeps the frame from reading as a still photo.
+
+   These live in CSS rather than in Motion on purpose. An always-on ambient
+   loop depends on no state, so driving it from a JS animation loop buys
+   nothing and costs main-thread work for as long as the page is open. The
+   reduced-motion block at the bottom of this file already flattens every
+   animation, so it is covered there too. Motion keeps the flavour swap,
+   which *is* state-driven.
+
+   Each is applied to a wrapper element rather than to the can and garnish
+   themselves: the swap animates `transform` on those, and two transforms on
+   one element means the later one simply wins.
+------------------------------------------------------------------- */
+@keyframes can-drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(0.7deg);
+  }
+}
+
+@keyframes garnish-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+.can-drift {
+  animation: can-drift 6.5s ease-in-out infinite;
+}
+
+/* Deliberately not a multiple of the can's period: 9s against 6.5s means the
+   two never come back into step, which is the difference between breathing
+   and bobbing on a metronome. */
+.garnish-drift {
+  animation: garnish-drift 9s ease-in-out infinite;
+}
+
+/* Scroll-entrance for cards and sections.
+   The hidden state is gated on `.js`, which an inline script in <head> sets
+   before first paint — so without JavaScript the content is simply visible
+   rather than stuck at opacity 0. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--duration-standard) var(--ease-signature),
+    transform var(--duration-standard) var(--ease-signature);
+}
+
+.js .reveal[data-inview="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Reveal with no entrance — used when nothing can animate (hidden tab). */
+.js .reveal[data-instant="true"] {
+  transition: none;
+}
+
+/* Horizontal card rails (PACKS) scroll edge-to-edge but snap per card. */
+.rail {
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > * {
+  scroll-snap-align: start;
+}
+
+/* ------------------------------------------------------------------
+   Reduced motion — every animation on the site is decorative, so it is
+   safe (and correct) to flatten all of them rather than shorten them.
+------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  /* Show revealed content outright rather than transitioning it in. */
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

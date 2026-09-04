@@ -1,0 +1,50 @@
+{
+  "/cans/limao.png": {
+    "width": 656,
+    "height": 1300
+  },
+  "/cans/pessego.png": {
+    "width": 656,
+    "height": 1300
+  },
+  "/cans/morango.png": {
+    "width": 656,
+    "height": 1300
+  },
+  "/fruits/limao.png": {
+    "width": 843,
+    "height": 900
+  },
+  "/fruits/pessego.png": {
+    "width": 734,
+    "height": 900
+  },
+  "/fruits/morango.png": {
+    "width": 679,
+    "height": 772
+  },
+  "/packs/limao.png": {
+    "width": 848,
+    "height": 998
+  },
+  "/packs/pessego.png": {
+    "width": 848,
+    "height": 998
+  },
+  "/packs/morango.png": {
+    "width": 848,
+    "height": 998
+  },
+  "/packs/misto.png": {
+    "width": 848,
+    "height": 998
+  },
+  "/textures/drops.png": {
+    "width": 2000,
+    "height": 2000
+  },
+  "/textures/fog.png": {
+    "width": 1600,
+    "height": 900
+  }
+}

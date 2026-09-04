@@ -1,0 +1,14 @@
+# Source artwork for scripts/prepare-assets.mjs. The build never reads it —
+# it consumes the generated files in public/ and lib/asset-sizes.json — so
+# uploading ~18 MB of it on every deploy buys nothing.
+assets
+
+# Build output and tooling that Vercel regenerates or never needs.
+.next
+node_modules
+scripts
+
+# `vercel link` writes a VERCEL_OIDC_TOKEN here. Never upload it.
+.env
+.env.local
+.env.*.local
