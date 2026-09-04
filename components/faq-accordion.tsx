@@ -51,7 +51,9 @@ export function FaqAccordion() {
                   transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
-                  <p className="max-w-3xl pb-7 pr-10 text-sm leading-relaxed text-chalk-faint">
+                  {/* pr only from `sm` — as a measure device on a 327px phone
+                      column it was eating 12% of the line for nothing. */}
+                  <p className="max-w-3xl pb-7 text-sm leading-relaxed text-chalk-faint sm:pr-10">
                     {item.a}
                   </p>
                 </motion.div>

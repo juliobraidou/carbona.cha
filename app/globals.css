@@ -48,8 +48,11 @@
 ------------------------------------------------------------------- */
 html {
   scroll-behavior: smooth;
-  /* Keeps the fixed header from covering anchor targets. */
-  scroll-padding-top: 7rem;
+  /* Keeps the fixed header from covering anchor targets. Measured against the
+     tallest the header ever gets: 168px in the 640–767px band, where the bar
+     is at its `sm` size and the mobile nav row is still showing. A smaller
+     value lands every #packs / #dentro heading underneath the header. */
+  scroll-padding-top: 11rem;
   background-color: var(--color-ink);
 }
 
@@ -59,6 +62,15 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* The packs rail bleeds edge-to-edge with a negative margin that cancels the
+     page gutter. Once the viewport passes the 1600px container cap the two
+     stop cancelling, and between ~1600 and ~1680px the rail pushed 20px past
+     each side of the viewport and the whole body scrolled sideways.
+
+     `clip`, not `hidden`: `hidden` on one axis forces the other to `auto`,
+     which turns the body into a scroll container and breaks scroll anchoring.
+     `clip` leaves overflow-y visible. */
+  overflow-x: clip;
 }
 
 ::selection {
@@ -127,6 +139,67 @@ body {
 
 .btn-surface:disabled {
   opacity: 0.6;
+}
+
+/* Text inputs, declared once for the same reason `.btn-surface` is: the
+   contact form and the checkout form are the same control, and keeping two
+   copies of this string in sync by hand is how they quietly drift apart. */
+.field {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background-color: rgba(255, 255, 255, 0.03);
+  padding: 0.875rem 1rem;
+  color: var(--color-chalk);
+  /* 16px, not 15. Below 16px iOS Safari zooms the viewport when the field
+     takes focus, and it does not zoom back out afterwards — the rest of the
+     page is left scaled up with the layout pushed off screen. The desktop
+     step down to 15px is in the media query below. */
+  font-size: 1rem;
+  transition: border-color var(--duration-quick) var(--ease-signature);
+}
+
+@media (min-width: 40rem) {
+  .field {
+    font-size: 15px;
+  }
+}
+
+.field::placeholder {
+  color: var(--color-chalk-faint);
+}
+
+.field:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+  outline: none;
+}
+
+/* ------------------------------------------------------------------
+   Cart drawer scroll lock
+
+   `scrollbar-gutter: stable` on <html> would be the tidy answer, but it
+   reserves the gutter even when the page does not scroll — and the home page
+   is exactly one viewport with no overflow, so on Windows it leaves a strip
+   of body-black down the right of the full-bleed hero gradient.
+
+   The gutter width is measured in JS before the class lands (afterwards the
+   scrollbar is gone and the difference reads as zero) and published as
+   --scrollbar-gutter. On overlay scrollbars it is 0 and all of this is inert.
+------------------------------------------------------------------- */
+html.cart-open {
+  overflow: hidden;
+}
+
+html.cart-open body {
+  padding-right: var(--scrollbar-gutter, 0px);
+}
+
+/* The header is `fixed`, so it measures against the initial containing block,
+   whose width EXCLUDES the scrollbar. Hiding the scrollbar widens that block
+   and carries the cart button ~15px right, while body padding holds the
+   content beside it still. Pulling `right` in by the same amount cancels it. */
+html.cart-open [data-scroll-lock-pad] {
+  right: var(--scrollbar-gutter, 0px);
 }
 
 /* ------------------------------------------------------------------

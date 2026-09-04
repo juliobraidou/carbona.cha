@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Inter, Outfit } from "next/font/google";
 
+import { CartDrawer } from "@/components/cart-drawer";
 import { CartProvider } from "@/components/cart-provider";
+import { CartUIProvider } from "@/components/cart-ui-provider";
 import { SiteHeader } from "@/components/site-header";
 import "@/app/globals.css";
 
@@ -85,10 +87,19 @@ export default function RootLayout({
             `<main>` and the footer are supplied per page (via PageShell)
             rather than here: the home page is a single full-viewport frame
             with no footer, and a footer nested inside `<main>` would lose
-            its `contentinfo` landmark. */}
+            its `contentinfo` landmark.
+
+            The drawer is mounted here rather than in PageShell for the
+            opposite reason: the home page skips PageShell but still shows the
+            cart badge, and a badge that opens nothing is worse than no badge.
+            Neither provider emits DOM, so <CartDrawer> is a direct child of
+            <body> — which is why it needs no portal. */}
         <CartProvider>
-          <SiteHeader />
-          {children}
+          <CartUIProvider>
+            <SiteHeader />
+            {children}
+            <CartDrawer />
+          </CartUIProvider>
         </CartProvider>
       </body>
     </html>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 
 import { useCartCount } from "@/components/cart-provider";
+import { useCartUIActions } from "@/components/cart-ui-provider";
 import { CartIcon } from "@/components/icons";
 
 const NAV = [
@@ -16,15 +17,24 @@ const NAV = [
 export function SiteHeader() {
   const pathname = usePathname();
   const count = useCartCount();
+  const { openCart } = useCartUIActions();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    // data-scroll-lock-pad: globals.css pulls `right` in by the scrollbar
+    // width while the drawer is open. See the note there — a fixed header
+    // measures against a containing block that widens when the scrollbar goes.
+    <header data-scroll-lock-pad className="fixed inset-x-0 top-0 z-50">
       {/* Scrim: the bar is fixed and transparent, so without this the page
           content scrolls straight through the logo. It blends into the dark
-          top of the hero gradient and into the near-black inner pages. */}
+          top of the hero gradient and into the near-black inner pages.
+
+          The height tracks the header's own: 144px at base, 168px in the
+          640–767px band where the bar takes its `sm` size but the mobile nav
+          row is still showing, and back to 144px once that row is hidden. A
+          flat 144px left the nav pill sitting on raw page content. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-ink via-ink/85 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-36 bg-gradient-to-b from-ink via-ink/85 to-transparent sm:h-44 md:h-36"
       />
 
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-6 py-6 sm:px-10 sm:py-8">
@@ -69,8 +79,21 @@ export function SiteHeader() {
           </ul>
         </nav>
 
+        {/* Still a <Link>, not a <button>: with JavaScript unavailable this
+            keeps working and lands on the shop, which is the same principle
+            the `.js` gate in globals.css applies to the scroll reveals.
+            `aria-haspopup` is static, so the header stays subscribed to the
+            drawer's actions only and never re-renders when it opens. */}
         <Link
           href="/shop"
+          aria-haspopup="dialog"
+          onClick={(event) => {
+            event.preventDefault();
+            openCart();
+          }}
+          /* Warms the drawer's lazy chunk so the slide-in is not waiting on a
+             network round trip. Repeat calls hit the module cache. */
+          onPointerEnter={() => void import("@/components/cart-panel")}
           className="relative grid size-12 place-items-center rounded-full bg-white/12 text-chalk backdrop-blur-xl transition-[background-color,transform] duration-160 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/20 active:scale-95 sm:size-14"
         >
           <span className="sr-only">
@@ -110,7 +133,9 @@ export function SiteHeader() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className="relative rounded-[20px] px-4 py-2 text-sm font-medium text-chalk-dim aria-[current=page]:text-chalk"
+              /* py-3, not py-2: at py-2 the row was 36px tall, under the 44px
+                 minimum for a touch target. */
+              className="relative rounded-[20px] px-4 py-3 text-sm font-medium text-chalk-dim aria-[current=page]:text-chalk"
             >
               {active ? (
                 <motion.span

@@ -24,7 +24,10 @@ export const metadata: Metadata = {
 export default function ShopPage() {
   return (
     <PageShell>
-      <div className="mx-auto max-w-[1600px] px-6 pb-24 pt-36 sm:px-10 sm:pt-44">
+      {/* pt clears the fixed header: 144px at base, 168px in the 640–767px
+          band where the mobile nav row is still showing. The old pt-36 was
+          exactly the base header height, so the h1 started at its very edge. */}
+      <div className="mx-auto max-w-[1600px] px-6 pb-24 pt-40 sm:px-10 sm:pt-48">
         {/* ---------------------------------------------------------- SHOP */}
         <section aria-labelledby="shop-title">
           <Reveal>
@@ -44,7 +47,7 @@ export default function ShopPage() {
         </section>
 
         {/* --------------------------------------------------------- PACKS */}
-        <section aria-labelledby="packs-title" className="mt-24 scroll-mt-32" id="packs">
+        <section aria-labelledby="packs-title" className="mt-24 scroll-mt-40 sm:scroll-mt-48" id="packs">
           <Reveal>
             <h2 id="packs-title" className="section-title text-5xl sm:text-6xl">
               Packs
@@ -82,7 +85,9 @@ export default function ShopPage() {
               }}
             />
 
-            <div className="relative grid items-center gap-10 p-8 lg:grid-cols-2 lg:gap-6 lg:p-12">
+            {/* p-6 at base: with the page's own px-6, p-8 left a 263px text
+                column on a 375px screen — the tightest measure on the site. */}
+            <div className="relative grid items-center gap-10 p-6 sm:p-8 lg:grid-cols-2 lg:gap-6 lg:p-12">
               <div className="relative h-64 sm:h-80">
                 <CanStack cans={TASTING_KIT.cans} image={TASTING_KIT.packImage} />
               </div>
@@ -109,7 +114,7 @@ export default function ShopPage() {
                 </p>
 
                 <div className="mt-6 max-w-[280px]">
-                  <AddToCartButton productId="kit-degustacao" label={TASTING_KIT.cta} />
+                  <AddToCartButton productId={TASTING_KIT.id} label={TASTING_KIT.cta} />
                 </div>
               </div>
             </div>
@@ -117,7 +122,7 @@ export default function ShopPage() {
         </Reveal>
 
         {/* ------------------------------------------------ O QUE TEM DENTRO */}
-        <section aria-labelledby="dentro-title" className="mt-24 scroll-mt-32" id="dentro">
+        <section aria-labelledby="dentro-title" className="mt-24 scroll-mt-40 sm:scroll-mt-48" id="dentro">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <h2 id="dentro-title" className="section-title text-4xl sm:text-5xl">
@@ -127,7 +132,9 @@ export default function ShopPage() {
             </div>
           </Reveal>
 
-          <ul className="mt-8 grid gap-10 border-t border-ink-hairline pt-10 sm:grid-cols-3 sm:gap-6">
+          {/* Two columns at `sm`, three only at `lg`: jumping straight to three
+              put ~187px columns on a 640px screen. */}
+          <ul className="mt-8 grid gap-10 border-t border-ink-hairline pt-10 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {INGREDIENT_FACTS.map((fact, index) => (
               <li key={fact.title}>
                 <Reveal delay={index * 0.07}>
@@ -143,7 +150,7 @@ export default function ShopPage() {
         </section>
 
         {/* ------------------------------------------------------- DUVIDAS */}
-        <section aria-labelledby="duvidas-title" className="mt-24 scroll-mt-32" id="duvidas">
+        <section aria-labelledby="duvidas-title" className="mt-24 scroll-mt-40 sm:scroll-mt-48" id="duvidas">
           <Reveal>
             <h2 id="duvidas-title" className="section-title text-4xl sm:text-5xl">
               Duvidas

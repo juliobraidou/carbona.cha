@@ -27,10 +27,14 @@ app/
   shop/page.tsx       Shop — grid, packs, kit, "o que tem dentro", dúvidas
   contato/page.tsx    Contato — canais + formulário
   contato/actions.ts  Server Action do formulário
-components/           header, footer, carrossel, cards, acordeão, formulário
+  checkout/actions.ts Server Action do checkout (pasta sem page — não é rota)
+components/           header, footer, carrossel, cards, acordeão, formulários
+  cart-*.tsx          provider, drawer, painel, linha, formulário de checkout
 lib/
   flavors.ts          os três sabores — cor, gradiente, imagens, copy
   products.ts         avulsos, packs, kit, FAQ, canais de contato, preços
+  shipping.ts         faixas de frete grátis, prazo por CEP, parcelas
+  validation.ts       e-mail e CEP — compartilhado entre as duas actions
   asset-sizes.json    gerado — dimensões reais de cada arte
 assets/               FONTE da arte: cans/, fruits/, packs/ — nunca escrita
 public/cans/          GERADO a partir de assets/cans/
@@ -78,6 +82,20 @@ O termo em `vh` manda em telas largas (mantendo os 64% do Figma em qualquer
 resolução); o termo em `vw` só entra em viewport estreita, onde 64vh deixaria
 a lata com 70% da largura da tela. Medido: 64% em 1400×900, 1080p, 1440p e
 4K; 52% no tablet e 48% no mobile, sem overflow horizontal.
+
+O wordmark e a guarnição do canto precisam da mesma escada, e por um motivo
+que não é óbvio: a lata é dimensionada por `vh` nas telas largas, então
+qualquer coisa ao lado dela presa a um `vw` fixo diverge no celular. Em 375px
+o wordmark media ~188px atrás de uma lata de 199px — invisível — e a guarnição
+"grande" do canto saía com 101px contra os 119px da guarnição que deveria ser
+um detalhe atrás da lata.
+
+O `overflow-x: clip` no `body` (não `hidden`, que forçaria o outro eixo a
+`auto` e transformaria o body em contêiner de rolagem) existe por causa do
+rail dos packs: ele sangra até a borda com margem negativa que cancela o
+gutter da página, e assim que a viewport passa dos 1600px do contêiner as duas
+param de se cancelar — entre ~1600 e ~1680px o rail empurrava 20px para fora
+de cada lado.
 
 ## Trocando a arte dos produtos
 
@@ -154,6 +172,57 @@ funciona, mas as latas de trás são cópias escaladas da mesma lata frontal.
 Uma foto real, com as latas de trás giradas e iluminadas como objetos
 próprios, sempre ganha.
 
+## Carrinho e checkout
+
+O botão do header abre um drawer lateral com três passos: lista → entrega e
+pagamento → confirmação. Ele fica montado no layout raiz, e não no `PageShell`,
+porque a Home não passa pelo `PageShell` mas mostra o badge do carrinho — badge
+que não abre nada é pior que badge nenhum.
+
+O drawer é um **`<dialog>` nativo com `showModal()`**. Isso resolve de graça
+quatro coisas que não existem em lugar nenhum do código: o focus trap, a
+devolução do foco ao botão do carrinho, o Escape, e ficar acima do header
+`z-50` — um dialog modal vive na top layer, então z-index não entra na
+conversa. Também torna `role="dialog"` e `aria-modal` redundantes.
+
+Duas armadilhas de mecânica, ambas comentadas no arquivo:
+
+- `close()` tira o elemento da top layer na hora, o que cortaria a animação de
+  saída. Então fechar é: o estado vira, o `AnimatePresence` roda o exit, e só o
+  `onExitComplete` chama `close()`.
+- Os filhos do `AnimatePresence` têm que ser componentes do Motion
+  **diretamente**. Embrulhados numa `<div>` comum, o exit nunca toca.
+
+### Persistência
+
+`cart-provider.tsx` grava em `localStorage` por um efeito, e não dentro do
+updater do `setState` — updater tem que ser puro. O guard de "só depois de
+hidratar" é **state de render, não ref**: refs sobrevivem ao unmount que o
+StrictMode simula, então um ref de "pula a primeira execução" apagaria o
+carrinho a cada mount em desenvolvimento.
+
+Os valores lidos do storage são validados um a um. O cast direto era inofensivo
+enquanto o carrinho só era contado, mas o painel multiplica quantidade por
+preço — uma entrada corrompida ali vira "R$ NaN" no subtotal inteiro.
+
+`findCartProduct` em `lib/products.ts` **não lança**, ao contrário de
+`getFlavor` e `sizeOf`. Aqueles leem ids vindos do código; este lê ids vindos
+do `localStorage`, que podem nomear um produto já retirado do catálogo. Isso
+tem que virar linha descartada, não página quebrada.
+
+### Frete
+
+`lib/shipping.ts` é importado pelo cliente e pela Server Action, então o valor
+que o medidor promete não consegue divergir do que o pedido cobra.
+
+O frete grátis é regional — R$ 150 no Sudeste, R$ 250 no resto — mas a região
+só aparece com o CEP, no passo 2, e o medidor fica no passo 1. Ele mostra os
+**dois** níveis: supor o menor prometeria frete que o cliente talvez não tenha,
+e supor o maior contradiria o próprio FAQ.
+
+Os prefixos de CEP 01–39 são exatamente SP, RJ, ES e MG — o Sudeste inteiro;
+a Bahia começa em 40. Uma comparação no lugar de uma tabela de estados.
+
 ## Tokens de design
 
 Tudo em `app/globals.css`, dentro de `@theme`:
@@ -204,8 +273,9 @@ si. As duas já têm `transform` animado pela troca de sabor, e dois
 - **Copy das dúvidas 2, 3 e 4.** No Figma só a primeira estava aberta; as
   outras três respostas em `lib/products.ts` foram escritas no mesmo tom e
   precisam de revisão.
-- **Carrinho.** `components/cart-provider.tsx` conta itens e persiste em
-  `localStorage`; não existe checkout.
+- **Checkout de verdade.** O fluxo do drawer valida, reprecifica no servidor e
+  formata, mas não cobra nada e não grava pedido nenhum — falta um provedor de
+  pagamento, rate limiting e uma chave de idempotência.
 - **Página `/privacidade`**, linkada no footer.
 - **Marca d'água.** O PNG do morango é um comp do Pngtree e tem marca d'água
   — precisa da arte licenciada antes de publicar.

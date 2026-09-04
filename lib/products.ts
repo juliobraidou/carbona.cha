@@ -67,6 +67,10 @@ export const PACKS: readonly Product[] = [
 ];
 
 export const TASTING_KIT = {
+  /* The cart id. It used to be a bare string literal at the one call site in
+     the shop page, which meant the cart could hold an id that existed nowhere
+     in this file. */
+  id: "kit-degustacao",
   eyebrow: "PRIMEIRA VEZ",
   title: "Kit Degustação\nos três sabores",
   description:
@@ -77,6 +81,77 @@ export const TASTING_KIT = {
   packImage: packArt("misto"),
   cta: "Adicionar ao Carrinho",
 } as const;
+
+/* ------------------------------------------------------------------
+   Cart lookup
+------------------------------------------------------------------- */
+
+/**
+ * What a cart row needs, and nothing else.
+ *
+ * Deliberately not `Product`: the tasting kit is not one (its `title` carries
+ * a newline for the two-line display heading on the shop page) and a row never
+ * needs `cans`, `badge` or `discountLabel`.
+ */
+export interface CartProduct {
+  id: string;
+  /** One line — a cart row is one line tall. */
+  title: string;
+  subtitle: string;
+  priceCents: number;
+  /**
+   * Already checked against asset-sizes.json, so a row can call `sizeOf` on
+   * it without a guard. `undefined` means "draw the flavour dot instead".
+   */
+  image?: string;
+  flavor: Flavor;
+}
+
+/** Validates at module scope so `CartProduct.image` is safe by construction. */
+function thumbnail(candidate: string | undefined): string | undefined {
+  return candidate && hasAsset(candidate) ? candidate : undefined;
+}
+
+function toCartProduct(product: Product): CartProduct {
+  return {
+    id: product.id,
+    title: product.title,
+    subtitle: product.subtitle,
+    priceCents: product.priceCents,
+    image: thumbnail(product.packImage ?? product.cans[0].image),
+    flavor: product.flavor,
+  };
+}
+
+const CART_BY_ID = new Map<string, CartProduct>([
+  ...SINGLES.map((p) => [p.id, toCartProduct(p)] as const),
+  ...PACKS.map((p) => [p.id, toCartProduct(p)] as const),
+  [
+    TASTING_KIT.id,
+    {
+      id: TASTING_KIT.id,
+      /* Flattened — the `\n` in TASTING_KIT.title is for the shop heading. */
+      title: "Kit Degustação",
+      subtitle: "6 × 350ml — os três sabores",
+      priceCents: TASTING_KIT.priceCents,
+      image: thumbnail(TASTING_KIT.packImage),
+      flavor: FLAVORS[0],
+    } satisfies CartProduct,
+  ],
+]);
+
+/**
+ * Non-throwing, unlike `getFlavor` and `sizeOf` in lib/flavors.ts — and named
+ * `find` rather than `get` so the difference is visible at the call site.
+ *
+ * Those two throw because they read ids that came from the code. This one
+ * reads ids that came from localStorage, which can legitimately name a product
+ * that has since been removed from the catalogue. That has to render as a
+ * dropped row, not a crashed page.
+ */
+export function findCartProduct(id: string): CartProduct | undefined {
+  return CART_BY_ID.get(id);
+}
 
 /** "OQUE TEM DENTRO?" — icon is picked by name in the section component. */
 export const INGREDIENT_FACTS = [

@@ -57,14 +57,20 @@ export function CanStack({
 
   return (
     <div className="relative h-full">
-      {/* Back row sits lower and smaller so the middle can reads as nearest. */}
+      {/* Back row sits lower and smaller so the middle can reads as nearest.
+
+          The `sizes` hints below are ladders rather than the flat 14vw/18vw
+          they used to be: the card is a single column on a phone, so these
+          cans render at roughly twice the share of the viewport they take on
+          a desktop grid, and a flat hint had the browser fetching an image
+          too small for the box it lands in. */}
       <Image
         src={left.image}
         alt=""
         aria-hidden="true"
         width={size.width}
         height={size.height}
-        sizes="14vw"
+        sizes="(max-width: 640px) 32vw, (max-width: 1024px) 20vw, 14vw"
         className="absolute bottom-0 left-[4%] h-[84%] w-auto object-contain"
       />
       <Image
@@ -73,7 +79,7 @@ export function CanStack({
         aria-hidden="true"
         width={size.width}
         height={size.height}
-        sizes="14vw"
+        sizes="(max-width: 640px) 32vw, (max-width: 1024px) 20vw, 14vw"
         className="absolute bottom-0 right-[4%] h-[84%] w-auto object-contain"
       />
       <Image
@@ -81,7 +87,7 @@ export function CanStack({
         alt={`Pack com latas de ${cans.map((c) => c.name).join(", ")}`}
         width={size.width}
         height={size.height}
-        sizes="18vw"
+        sizes="(max-width: 640px) 38vw, (max-width: 1024px) 24vw, 18vw"
         className="absolute bottom-0 left-1/2 h-full w-auto -translate-x-1/2 object-contain drop-shadow-[0_18px_30px_rgba(0,0,0,0.5)]"
       />
     </div>

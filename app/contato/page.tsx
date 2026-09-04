@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function ContatoPage() {
   return (
     <PageShell>
-      <div className="mx-auto max-w-[1600px] px-6 pb-28 pt-36 sm:px-10 sm:pt-44">
+      <div className="mx-auto max-w-[1600px] px-6 pb-28 pt-40 sm:px-10 sm:pt-48">
         <Reveal>
           <h1 className="section-title text-5xl sm:text-7xl">Contato</h1>
           <p className="mt-3 text-lg text-chalk-faint">
@@ -23,7 +23,7 @@ export default function ContatoPage() {
           </p>
         </Reveal>
 
-        <div className="mt-16 grid gap-14 lg:grid-cols-2 lg:gap-16">
+        <div className="mt-12 grid gap-12 sm:mt-16 lg:grid-cols-2 lg:gap-16">
           <Reveal delay={0.07}>
             <h2 className="max-w-xl text-3xl font-bold leading-[1.16] tracking-tight sm:text-[40px]">
               Problema no pedido, proposta de revenda ou só uma dúvida sobre a bebida.
@@ -43,11 +43,16 @@ export default function ContatoPage() {
                     rel={channel.href.startsWith("http") ? "noreferrer" : undefined}
                     className="group flex items-center justify-between gap-6 py-6"
                   >
-                    <span>
+                    {/* min-w-0: a flex item defaults to min-width:auto, so the
+                        e-mail address could not shrink and pushed the row wide
+                        on a narrow phone. */}
+                    <span className="min-w-0">
                       <span className="block text-xs font-semibold tracking-[0.12em] text-chalk-faint">
                         {channel.label}
                       </span>
-                      <span className="mt-1.5 block text-lg text-chalk">{channel.value}</span>
+                      <span className="mt-1.5 block wrap-break-word text-lg text-chalk">
+                        {channel.value}
+                      </span>
                     </span>
                     {/* The arrow leans out on hover — a small "this leaves the
                         page" cue that costs nothing to read. */}

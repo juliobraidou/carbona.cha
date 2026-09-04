@@ -1,6 +1,7 @@
 "use server";
 
 import { CONTACT_SUBJECTS } from "@/lib/products";
+import { EMAIL_RE } from "@/lib/validation";
 
 export interface ContactFormState {
   status: "idle" | "success" | "error";
@@ -10,8 +11,6 @@ export interface ContactFormState {
 }
 
 export const EMPTY_STATE: ContactFormState = { status: "idle", message: "" };
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function sendContactMessage(
   _prev: ContactFormState,

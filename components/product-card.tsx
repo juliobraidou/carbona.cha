@@ -13,7 +13,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   return (
     <article
       id={flavor.id}
-      className="group flex h-full scroll-mt-32 flex-col overflow-hidden rounded-[20px] border border-white/[0.07] bg-gradient-to-b from-white/[0.06] to-transparent p-5 transition-colors duration-320 hover:border-white/15"
+      className="group flex h-full scroll-mt-40 flex-col sm:scroll-mt-48 overflow-hidden rounded-[20px] border border-white/[0.07] bg-gradient-to-b from-white/[0.06] to-transparent p-5 transition-colors duration-320 hover:border-white/15"
     >
       <div className="flex items-start justify-between">
         {product.badge ? (

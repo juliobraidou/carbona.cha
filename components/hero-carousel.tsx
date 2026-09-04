@@ -29,6 +29,13 @@ export function HeroCarousel() {
     setState(([current]) => [wrap(current + delta, FLAVORS.length), delta]);
   }, []);
 
+  /* Jumping straight to a flavour, for the dot indicators. The direction is
+     derived from where it sits relative to the current one, so the can still
+     leaves the way the eye expects. */
+  const goTo = useCallback((next: number) => {
+    setState(([current]) => [next, next >= current ? 1 : -1]);
+  }, []);
+
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       if (event.key === "ArrowDown" || event.key === "ArrowRight") {
@@ -91,7 +98,12 @@ export function HeroCarousel() {
           /* Lands 80ms after the can starts — follow-through, so the two
              layers read as connected rather than simultaneous. */
           transition={{ duration: 0.5, ease: SIGNATURE, delay: 0.08 }}
-          className="pointer-events-none absolute left-1/2 top-[41%] -z-30 w-full -translate-x-1/2 -translate-y-1/2 select-none text-center text-[7.8vw] text-chalk"
+          /* The size has to be a ladder, not a single vw figure. At a flat
+             7.8vw the word measured ~188px on a 375px screen — narrower than
+             the can standing in front of it, so the most recognisable thing in
+             the design rendered as zero visible pixels on a phone. The steps
+             keep it wider than the can at every width. */
+          className="pointer-events-none absolute left-1/2 top-[41%] -z-30 w-full -translate-x-1/2 -translate-y-1/2 select-none text-center text-[15vw] text-chalk sm:text-[11vw] lg:text-[7.8vw]"
         >
           {/* The horizontal stretch lives on the span so it cannot collide
               with the transform Motion animates on the paragraph. */}
@@ -133,8 +145,15 @@ export function HeroCarousel() {
 
                No pixel cap either — a `max-w` would shrink the garnish to a
                third of its intended size on a large display while the can
-               beside it kept scaling. */
-            style={{ height: `calc(27vw * ${flavor.heroFruitScale})` }}
+               beside it kept scaling.
+
+               The vw figure is a ladder because the can is sized off `vh` on
+               wide screens and `vw` only on narrow ones. At a flat 27vw the
+               two bases diverged, and on a phone this "big" corner garnish
+               came out 101px tall against the 119px one that is supposed to be
+               a small detail tucked behind the can. */
+            style={{ "--fruit-scale": flavor.heroFruitScale } as React.CSSProperties}
+            className="h-[calc(40vw*var(--fruit-scale))] sm:h-[calc(32vw*var(--fruit-scale))] lg:h-[calc(27vw*var(--fruit-scale))]"
           >
             <Image
               src={flavor.fruit}
@@ -205,14 +224,60 @@ export function HeroCarousel() {
         {flavor.productName} — {flavor.tagline}
       </p>
 
-      {/* ---- 6. Controls ---- */}
-      <div className="absolute right-5 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-4 sm:right-10">
+      {/* ---- 6. Controls ----
+           Two sets, because the two input methods want different things. On a
+           pointer the arrows in the gutter are precise and out of the way; on
+           a phone they were the only affordance for a three-item carousel, and
+           an arrow pinned to the right edge tells you nothing about how many
+           flavours there are or which one you are on. */}
+
+      {/* Swipe. A transparent layer rather than `drag` on the can wrapper:
+          that one carries the `.can-drift` CSS animation, and Motion writing
+          its own transform to the same element would overwrite it — the same
+          rule the drift itself follows. Sits below the arrows so they keep
+          taking clicks, and `pan-y` leaves vertical scrolling to the page. */}
+      <motion.div
+        aria-hidden="true"
+        drag="x"
+        dragSnapToOrigin
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.15}
+        onDragEnd={(_, info) => {
+          if (info.offset.x < -60 || info.velocity.x < -400) paginate(1);
+          else if (info.offset.x > 60 || info.velocity.x > 400) paginate(-1);
+        }}
+        style={{ touchAction: "pan-y" }}
+        className="absolute inset-0 z-10 md:hidden"
+      />
+
+      <div className="absolute right-5 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-4 sm:right-10 md:flex">
         <CarouselButton label="Sabor anterior" onClick={() => paginate(-1)}>
           <ArrowUpIcon className="size-5" />
         </CarouselButton>
         <CarouselButton label="Próximo sabor" onClick={() => paginate(1)}>
           <ArrowDownIcon className="size-5" />
         </CarouselButton>
+      </div>
+
+      {/* The dot is 8px but the button around it is 44 — the target has to be
+          tappable even though the mark should stay small. */}
+      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 md:hidden">
+        {FLAVORS.map((f, i) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => goTo(i)}
+            aria-label={`Ver ${f.productName}`}
+            aria-current={i === index ? "true" : undefined}
+            className="grid size-11 place-items-center"
+          >
+            <span
+              className={`block h-2 rounded-full transition-all duration-320 ease-signature ${
+                i === index ? "w-6 bg-chalk" : "w-2 bg-white/40"
+              }`}
+            />
+          </button>
+        ))}
       </div>
     </section>
   );

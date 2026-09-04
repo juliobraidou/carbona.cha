@@ -7,8 +7,8 @@ import { motion } from "motion/react";
 import { EMPTY_STATE, sendContactMessage } from "@/app/contato/actions";
 import { CONTACT_SUBJECTS, type ContactSubject } from "@/lib/products";
 
-const FIELD =
-  "w-full rounded-xl border border-white/[0.09] bg-white/[0.03] px-4 py-3.5 text-[15px] text-chalk placeholder:text-chalk-faint transition-colors duration-160 focus:border-white/25 focus:outline-none";
+/* The field surface itself is `.field` in globals.css — shared with the
+   checkout form, and 16px on mobile so iOS Safari does not zoom on focus. */
 
 export function ContactForm() {
   const [state, formAction] = useActionState(sendContactMessage, EMPTY_STATE);
@@ -30,8 +30,13 @@ export function ContactForm() {
         </legend>
 
         {/* Segmented control — the selected pill is a shared element that
-            slides, so the choice reads as one control rather than three. */}
-        <div className="mt-4 flex flex-wrap gap-2.5">
+            slides, so the choice reads as one control rather than three.
+
+            A column below `sm`: the three labels need ~455px and only had 279
+            on a phone, so they wrapped onto three rows and the shared pill
+            slid diagonally between them. Stacked, the slide is vertical and
+            reads as one control moving. */}
+        <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
           {CONTACT_SUBJECTS.map((option) => {
             const active = option === subject;
             return (
@@ -100,7 +105,7 @@ export function ContactForm() {
           placeholder="Conte o que aconteceu"
           aria-invalid={errors.message ? true : undefined}
           aria-describedby={errors.message ? `${id}-message-error` : undefined}
-          className={`mt-2 resize-y ${FIELD}`}
+          className="field mt-2 resize-y"
         />
         {errors.message ? (
           <p id={`${id}-message-error`} className="mt-2 text-xs text-morango-bright">
@@ -173,7 +178,7 @@ function Field({
         autoComplete={autoComplete}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`mt-2 ${FIELD}`}
+        className="field mt-2"
       />
       {error ? (
         <p id={`${id}-error`} className="mt-2 text-xs text-morango-bright">
